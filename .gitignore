@@ -1,0 +1,36 @@
+# IDE and editor files
+.cursor/
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+dist/
+.env.local
+
+# Environment
+.env
+*.env
+
+# Logs
+*.log
+logs/
+
+# Data (will be gitignored after project structure is set up)
+# data/images/
+# data/db.sqlite
