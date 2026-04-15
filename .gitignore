@@ -32,5 +32,4 @@ dist/
 logs/
 
 # Data (will be gitignored after project structure is set up)
-# data/images/
-# data/db.sqlite
+data/db.sqlite
