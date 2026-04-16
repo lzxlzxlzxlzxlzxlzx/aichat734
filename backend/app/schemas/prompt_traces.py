@@ -42,6 +42,21 @@ class PromptTraceFinalMessagesSection(BaseModel):
     total_messages: int = 0
 
 
+class PromptTraceHistorySection(BaseModel):
+    message_count: int = 0
+    first_sequence: int | None = None
+    last_sequence: int | None = None
+    role_counts: dict[str, int] = Field(default_factory=dict)
+
+
+class PromptTraceRequestSection(BaseModel):
+    requested_model: str | None = None
+    provider_name: str | None = None
+    mode: str | None = None
+    message_count: int = 0
+    finish_reason: str | None = None
+
+
 class PromptTraceResponseSection(BaseModel):
     raw_response: Any = None
     cleaned_response: str | None = None
@@ -89,6 +104,8 @@ class PromptTraceInspectorResponse(BaseModel):
     preset_section: PromptTracePresetSection
     injection_section: PromptTraceInjectionSection
     final_messages_section: PromptTraceFinalMessagesSection
+    history_section: PromptTraceHistorySection
+    request_section: PromptTraceRequestSection
     response_section: PromptTraceResponseSection
     token_section: PromptTraceTokenSection
     overview: PromptTraceOverviewSection

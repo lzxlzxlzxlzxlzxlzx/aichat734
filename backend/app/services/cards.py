@@ -1,8 +1,13 @@
 import json
+import re
 from datetime import datetime, timezone
+from io import BytesIO
+
+from fastapi import UploadFile
+from fastapi.responses import StreamingResponse
 
 from app.core.database import get_connection
-from app.core.exceptions import NotFoundError
+from app.core.exceptions import AppError, NotFoundError
 from app.core.ids import new_id
 from app.repositories.cards import CardRepository
 from app.schemas.cards import (
@@ -12,6 +17,7 @@ from app.schemas.cards import (
     CharacterCardUpdateRequest,
     CharacterCardVersionResponse,
 )
+from app.services.card_importer import CharacterCardTranscoderService
 
 
 def _utc_now() -> str:
@@ -20,6 +26,12 @@ def _utc_now() -> str:
 
 def _normalize_name(name: str) -> str:
     return "-".join(name.strip().lower().split())
+
+
+def _build_export_filename(name: str, fallback_id: str, extension: str) -> str:
+    normalized = _normalize_name(name)
+    sanitized = re.sub(r"[^a-z0-9._-]+", "-", normalized).strip("-")
+    return f"{sanitized or fallback_id}{extension}"
 
 
 def _build_base_info(payload: CharacterCardBase) -> dict:
@@ -74,6 +86,9 @@ def _row_to_card_response(row, version_row=None) -> CharacterCardResponse:
 
 
 class CardService:
+    def __init__(self) -> None:
+        self.transcoder = CharacterCardTranscoderService()
+
     def list_cards(self) -> list[CharacterCardResponse]:
         with get_connection() as connection:
             repository = CardRepository(connection)
@@ -145,6 +160,17 @@ class CardService:
 
         return _row_to_card_response(created_card, created_version)
 
+    def import_card(self, file: UploadFile) -> CharacterCardResponse:
+        file_name = file.filename or "card"
+        content = file.file.read()
+        if not content:
+            raise AppError("Uploaded character card file is empty.", 400)
+        payload = self.transcoder.build_create_request_from_upload(
+            file_name=file_name,
+            content=content,
+        )
+        return self.create_card(payload)
+
     def update_card(self, card_id: str, payload: CharacterCardUpdateRequest) -> CharacterCardResponse:
         now = _utc_now()
         with get_connection() as connection:
@@ -206,3 +232,39 @@ class CardService:
             updated_version = repository.get_card_version(current_version_id)
 
         return _row_to_card_response(updated_card, updated_version)
+
+    def export_card_json(self, card_id: str) -> StreamingResponse:
+        card = self.get_card(card_id)
+        if card.current_version is None:
+            raise NotFoundError(f"Character card version not found: {card_id}")
+        payload = self.transcoder.build_sillytavern_export_payload(
+            card=card,
+            version=card.current_version,
+        )
+        data = self.transcoder.export_json_bytes(payload=payload)
+        filename = _build_export_filename(card.name, card.id, ".json")
+        return StreamingResponse(
+            BytesIO(data),
+            media_type="application/json; charset=utf-8",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+            },
+        )
+
+    def export_card_png(self, card_id: str) -> StreamingResponse:
+        card = self.get_card(card_id)
+        if card.current_version is None:
+            raise NotFoundError(f"Character card version not found: {card_id}")
+        payload = self.transcoder.build_sillytavern_export_payload(
+            card=card,
+            version=card.current_version,
+        )
+        data = self.transcoder.export_png_bytes(payload=payload)
+        filename = _build_export_filename(card.name, card.id, ".png")
+        return StreamingResponse(
+            BytesIO(data),
+            media_type="image/png",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+            },
+        )

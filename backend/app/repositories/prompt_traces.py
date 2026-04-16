@@ -122,3 +122,32 @@ class PromptTraceRepository:
     def update_prompt_trace_swipe_id(self, trace_id: str, swipe_id: str) -> None:
         query = "UPDATE prompt_traces SET swipe_id = ? WHERE id = ?"
         self.connection.execute(query, (swipe_id, trace_id))
+
+    def update_prompt_trace_postprocess(
+        self,
+        trace_id: str,
+        *,
+        cleaned_response: str,
+        display_response: str,
+        regex_hits: str,
+        state_update: str,
+    ) -> None:
+        query = """
+        UPDATE prompt_traces
+        SET
+            cleaned_response = :cleaned_response,
+            display_response = :display_response,
+            regex_hits = :regex_hits,
+            state_update = :state_update
+        WHERE id = :trace_id
+        """
+        self.connection.execute(
+            query,
+            {
+                "trace_id": trace_id,
+                "cleaned_response": cleaned_response,
+                "display_response": display_response,
+                "regex_hits": regex_hits,
+                "state_update": state_update,
+            },
+        )

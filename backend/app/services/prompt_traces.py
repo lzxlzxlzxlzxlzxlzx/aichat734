@@ -6,11 +6,13 @@ from app.repositories.prompt_traces import PromptTraceRepository
 from app.repositories.sessions import SessionRepository
 from app.schemas.prompt_traces import (
     PromptTraceFinalMessagesSection,
+    PromptTraceHistorySection,
     PromptTraceInjectionSection,
     PromptTraceInputSection,
     PromptTraceInspectorResponse,
     PromptTraceOverviewSection,
     PromptTracePresetSection,
+    PromptTraceRequestSection,
     PromptTraceResponseSection,
     PromptTraceSummaryResponse,
     PromptTraceTokenSection,
@@ -80,11 +82,17 @@ def _row_to_inspector(row) -> PromptTraceInspectorResponse:
     normalized_input = row["normalized_input"]
     cleaned_response = row["cleaned_response"]
     display_response = row["display_response"]
+    raw_request = raw_response.get("request", {}) if isinstance(raw_response, dict) else {}
+    history_summary = raw_request.get("history_summary", {}) if isinstance(raw_request, dict) else {}
 
     estimated_input = token_stats.get("estimated_input")
     if not isinstance(estimated_input, int):
-        estimated_input = sum(
+        estimated_input = (
+            token_stats.get("final_messages_estimate")
+            if isinstance(token_stats.get("final_messages_estimate"), int)
+            else sum(
             int(item.get("token_estimate") or 0) for item in injection_items
+        )
         )
 
     estimated_output = _read_estimated_output(token_stats, display_response)
@@ -107,7 +115,9 @@ def _row_to_inspector(row) -> PromptTraceInspectorResponse:
         + len(preset_section.st_compat_legacy)
     )
 
-    state_update_parsed = state_update.get("parsed") if isinstance(state_update, dict) else None
+    state_update_parsed = (
+        state_update.get("parsed_updates") if isinstance(state_update, dict) else None
+    )
     has_state_update = bool(
         state_update
         and (
@@ -156,6 +166,29 @@ def _row_to_inspector(row) -> PromptTraceInspectorResponse:
             messages=final_messages,
             role_counts=_build_role_counts(final_messages),
             total_messages=len(final_messages),
+        ),
+        history_section=PromptTraceHistorySection(
+            message_count=int(
+                history_summary.get(
+                    "message_count",
+                    token_stats.get("history_message_count") or 0,
+                )
+            ),
+            first_sequence=history_summary.get("first_sequence"),
+            last_sequence=history_summary.get("last_sequence"),
+            role_counts=history_summary.get(
+                "role_counts",
+                token_stats.get("history_role_counts") or {},
+            ),
+        ),
+        request_section=PromptTraceRequestSection(
+            requested_model=raw_request.get(
+                "model_name", token_stats.get("requested_model")
+            ),
+            provider_name=raw_request.get("provider_name"),
+            mode=raw_request.get("mode", row["mode"]),
+            message_count=int(raw_request.get("message_count") or len(final_messages)),
+            finish_reason=str(token_stats.get("response_finish_reason") or "") or None,
         ),
         response_section=PromptTraceResponseSection(
             raw_response=raw_response,

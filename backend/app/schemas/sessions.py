@@ -18,6 +18,11 @@ class SessionCreateRequest(BaseModel):
     model_name: str | None = None
 
 
+class SessionCopyRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    source_message_id: str | None = None
+
+
 class SessionResponse(BaseModel):
     id: str
     mode: str
@@ -38,3 +43,9 @@ class SessionResponse(BaseModel):
     model_name: str | None = None
     created_at: datetime
     updated_at: datetime
+
+
+class SessionCopyResponse(BaseModel):
+    session: SessionResponse
+    source_snapshot_id: str
+    copied_message_count: int

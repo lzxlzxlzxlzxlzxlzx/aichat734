@@ -193,3 +193,11 @@ class CardRepository:
         WHERE id = :id
         """
         self.connection.execute(query, payload)
+
+    def update_card_project_id(self, card_id: str, project_id: str | None) -> None:
+        query = """
+        UPDATE character_cards
+        SET project_id = ?
+        WHERE id = ?
+        """
+        self.connection.execute(query, (project_id, card_id))

@@ -31,5 +31,9 @@ dist/
 *.log
 logs/
 
-# Data (will be gitignored after project structure is set up)
-data/db.sqlite
+# Runtime data
+data/*.sqlite
+data/uploads/
+
+# Test artifacts
+backend/scripts/__pycache__/

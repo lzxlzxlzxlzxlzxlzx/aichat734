@@ -1,7 +1,9 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+
+from app.schemas.media import MessageAttachmentBindRequest, MessageAttachmentResponse
 
 
 class MessageSwipeResponse(BaseModel):
@@ -38,13 +40,68 @@ class MessageResponse(BaseModel):
     created_at: datetime
     updated_at: datetime | None = None
     swipes: list[MessageSwipeResponse] = Field(default_factory=list)
+    attachments: list[MessageAttachmentResponse] = Field(default_factory=list)
+
+
+class MessageReferenceRequest(BaseModel):
+    reference_type: str = Field(pattern="^(card|worldbook|session|message)$")
+    target_id: str = Field(min_length=1)
+    label: str | None = Field(default=None, max_length=200)
+    max_messages: int | None = Field(default=None, ge=1, le=20)
 
 
 class SendMessageRequest(BaseModel):
-    content: str = Field(min_length=1)
+    content: str = ""
     structured_content: list[dict[str, Any]] | list[Any] = Field(default_factory=list)
+    attachments: list[MessageAttachmentBindRequest] = Field(default_factory=list)
+    references: list[MessageReferenceRequest] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_non_empty(self):
+        if not self.content.strip() and not self.attachments and not self.references:
+            raise ValueError("Message content or attachments must be provided.")
+        return self
 
 
 class SendMessageResponse(BaseModel):
     user_message: MessageResponse
     assistant_message: MessageResponse
+
+
+class UpdateMessageResponse(BaseModel):
+    message: MessageResponse
+    truncated_count: int = 0
+
+
+class UpdateMessageRequest(BaseModel):
+    content: str = ""
+    structured_content: list[dict[str, Any]] | list[Any] = Field(default_factory=list)
+    attachments: list[MessageAttachmentBindRequest] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_non_empty(self):
+        if not self.content.strip() and not self.attachments:
+            raise ValueError("Message content or attachments must be provided.")
+        return self
+
+
+class RegenerateMessageRequest(BaseModel):
+    model_name: str | None = None
+
+
+class ToggleMessageLockRequest(BaseModel):
+    is_locked: bool
+
+
+class DeleteSwipeResponse(BaseModel):
+    message_id: str
+    deleted_swipe_id: str
+    active_swipe_id: str | None = None
+
+
+class RollbackResponse(BaseModel):
+    session_id: str
+    message_count: int
+    last_message_id: str | None = None
+    rollback_to_message_id: str | None = None
+    snapshot_id: str | None = None

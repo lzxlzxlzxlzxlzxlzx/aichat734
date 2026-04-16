@@ -15,10 +15,15 @@ class Settings(BaseSettings):
     debug: bool = False
     api_v1_prefix: str = "/v1"
     data_dir: str = "data"
+    uploads_dir: str = "data/uploads"
     sqlite_schema_path: str = "sqlite_schema.sql"
     database_path: str = "data/db.sqlite"
     default_chat_model: str = "deepseek-chat"
     enable_mock_fallback: bool = True
+    memory_summary_segment_size: int = 10
+    memory_recent_raw_message_count: int = 8
+    memory_prompt_summary_limit: int = 3
+    memory_prompt_long_term_limit: int = 8
 
     qwen_api_key: str | None = None
     qwen_api_url: str | None = None
@@ -68,6 +73,10 @@ class Settings(BaseSettings):
     @property
     def resolved_data_dir(self) -> Path:
         return self.project_root / self.data_dir
+
+    @property
+    def resolved_uploads_dir(self) -> Path:
+        return self.project_root / self.uploads_dir
 
     @property
     def resolved_schema_path(self) -> Path:
