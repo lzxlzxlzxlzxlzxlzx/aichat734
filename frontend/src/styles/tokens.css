@@ -1,0 +1,43 @@
+:root {
+  color-scheme: light;
+  font-family:
+    "Segoe UI",
+    "PingFang SC",
+    "Microsoft YaHei",
+    sans-serif;
+  --bg-app: #f4efe6;
+  --bg-app-glow: rgba(183, 130, 78, 0.16);
+  --bg-surface-1: rgba(255, 251, 247, 0.92);
+  --bg-surface-2: rgba(247, 241, 234, 0.9);
+  --bg-surface-3: rgba(255, 255, 255, 0.78);
+  --bg-elevated: rgba(255, 255, 255, 0.95);
+  --fg-primary: #1f1a17;
+  --fg-secondary: #52463c;
+  --fg-muted: #7a6d63;
+  --border-subtle: rgba(103, 83, 67, 0.12);
+  --border-strong: rgba(103, 83, 67, 0.2);
+  --accent-primary: #bf6c31;
+  --accent-secondary: #204d58;
+  --accent-soft: rgba(191, 108, 49, 0.12);
+  --success: #30715e;
+  --warning: #9b6a17;
+  --danger: #a34845;
+  --shadow-soft: 0 16px 48px rgba(64, 41, 24, 0.08);
+  --shadow-card: 0 10px 30px rgba(50, 34, 22, 0.08);
+  --shadow-nav: 0 -16px 40px rgba(51, 31, 19, 0.12);
+  --radius-xs: 10px;
+  --radius-sm: 14px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+  --space-9: 56px;
+  --content-max: 1280px;
+  --nav-height: 78px;
+}

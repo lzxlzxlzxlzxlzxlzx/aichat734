@@ -14,6 +14,13 @@ class Settings(BaseSettings):
     app_name: str = "Izumi Studio API"
     debug: bool = False
     api_v1_prefix: str = "/v1"
+    backend_port: int = 7734
+    cors_allowed_origins: list[str] = Field(
+        default_factory=lambda: [
+            "http://127.0.0.1:2734",
+            "http://localhost:2734",
+        ]
+    )
     data_dir: str = "data"
     uploads_dir: str = "data/uploads"
     sqlite_schema_path: str = "sqlite_schema.sql"
@@ -68,6 +75,13 @@ class Settings(BaseSettings):
                 return True
             if normalized in {"0", "false", "no", "off"}:
                 return False
+        return value
+
+    @field_validator("cors_allowed_origins", mode="before")
+    @classmethod
+    def normalize_cors_allowed_origins(cls, value):
+        if isinstance(value, str):
+            return [item.strip() for item in value.split(",") if item.strip()]
         return value
 
     @property

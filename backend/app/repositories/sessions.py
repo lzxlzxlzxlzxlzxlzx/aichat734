@@ -63,6 +63,7 @@ class SessionRepository:
         LEFT JOIN state_snapshots AS ss
           ON ss.id = s.current_state_snapshot_id
         WHERE s.mode = ?
+          AND s.status != 'deleted'
         ORDER BY s.updated_at DESC
         """
         return self.connection.execute(query, (mode,)).fetchall()

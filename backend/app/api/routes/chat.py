@@ -59,6 +59,11 @@ async def update_chat_session_model(
     return service.update_chat_session_model(session_id, payload)
 
 
+@router.delete("/sessions/{session_id}", response_model=SessionResponse)
+async def delete_chat_session(session_id: str) -> SessionResponse:
+    return service.delete_chat_session(session_id)
+
+
 @router.get(
     "/sessions/{session_id}/quick-replies",
     response_model=list[ChatQuickReplyGroup],

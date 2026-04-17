@@ -150,6 +150,20 @@ class ChatService:
             updated = sessions.get_session(session_id)
             return _row_to_session_response(updated)
 
+    def delete_chat_session(self, session_id: str) -> SessionResponse:
+        with get_connection() as connection:
+            sessions = SessionRepository(connection)
+            session_row = sessions.get_session(session_id)
+            if session_row is None or session_row["mode"] != "chat":
+                raise NotFoundError(f"Chat session not found: {session_id}")
+            sessions.update_session_metadata(
+                session_id,
+                status="deleted",
+                updated_at=utc_now_iso(),
+            )
+            updated = sessions.get_session(session_id)
+            return _row_to_session_response(updated)
+
     def list_quick_replies(self, session_id: str) -> list[ChatQuickReplyGroup]:
         self._require_chat_session(session_id)
         with get_connection() as connection:
